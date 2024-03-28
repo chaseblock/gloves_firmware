@@ -1,0 +1,94 @@
+// Copyright (c) 2024 Nordic Semiconductor ASA
+// SPDX-License-Identifier: Apache-2.0
+
+/dts-v1/;
+#include <nordic/nrf52832_qfaa.dtsi>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+// Pin Mappings
+&pinctrl {
+    spi0_default: spi0_default {
+        group1 {
+            psels = <NRF_PSEL(SPIM_SCK, 0, 17)>,
+                    <NRF_PSEL(SPIM_MOSI, 0, 16)>,
+                    <NRF_PSEL(SPIM_MISO, 0, 12)>;
+        };
+    };
+
+    spi0_sleep: spi0_sleep {
+        group1 {
+            psels = <NRF_PSEL(SPIM_SCK, 0, 17)>,
+                    <NRF_PSEL(SPIM_MOSI, 0, 16)>,
+                    <NRF_PSEL(SPIM_MISO, 0, 12)>;
+            low-power-enable;
+        };
+    };
+};
+
+// Other configurations
+
+/ {
+	model = "glove_board";
+	compatible = "block,glove-board";
+
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,code-partition = &slot0_partition;
+	};
+};
+
+&uicr {
+	gpio-as-nreset;
+};
+
+&gpiote {
+	status = "okay";
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x0 0xc000>;
+		};
+		slot0_partition: partition@c000 {
+			label = "image-0";
+			reg = <0xc000 0x32000>;
+		};
+		slot1_partition: partition@3e000 {
+			label = "image-1";
+			reg = <0x3e000 0x32000>;
+		};
+		scratch_partition: partition@70000 {
+			label = "image-scratch";
+			reg = <0x70000 0xa000>;
+		};
+		storage_partition: partition@7a000 {
+			label = "storage";
+			reg = <0x7a000 0x6000>;
+		};
+	};
+};
+
+imu_spi: &spi0 {
+    compatible = "nordic,nrf-spi";
+    status = "okay";
+    pinctrl-0 = <&spi0_default>;
+    pinctrl-1 = <&spi0_sleep>;
+	pinctrl-names = "default", "sleep";
+    cs-gpios = <&gpio0 19 GPIO_ACTIVE_LOW>;
+    reg_imu_spi: spi-dev-a@0 {
+        compatible = "st,lsm6dsl"; // We actually use the lsm6dsr, but I think this should be fine.
+		reg = <0>;
+		spi-max-frequency = <1000000>;
+    };
+};

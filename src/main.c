@@ -22,6 +22,7 @@ int main(void)
     // TODO: replace with actual data
     while (1)
     {
+        imu_get(&data.imu_data);
         ble_send_data(&data);
         ble_wait_for_tx_completion();
         data.pkt_id += 1;

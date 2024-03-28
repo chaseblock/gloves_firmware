@@ -89,7 +89,7 @@ static void connected(struct bt_conn *conn, uint8_t conn_err)
 
     volatile uint32_t max_msg_size = bt_nus_get_mtu(conn);
 
-    printk("Connected: %s, mut: %s", addr, max_msg_size);
+    printk("Connected: %s, mut: %d", addr, max_msg_size);
 }
 
 static void disconnected(struct bt_conn *conn, uint8_t reason)
