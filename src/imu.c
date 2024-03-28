@@ -110,7 +110,8 @@ static const struct spi_config spi_cfg = {
 void write_register(uint8_t addr, uint8_t data)
 {
     // Arrange the data
-    struct spi_buf tx_buf = {.buf = {addr | (1 << 7), data}, .len = 2};
+    uint8_t b[] = {addr | (1 << 7), data};
+    struct spi_buf tx_buf = {.buf = b, .len = 2};
     struct spi_buf_set tx_bufs = {.buffers = &tx_buf, .count = 1};
 
     // Write
@@ -120,16 +121,18 @@ void write_register(uint8_t addr, uint8_t data)
 uint8_t read_register(uint8_t addr)
 {
     // Set up the tx and rx buffers
-    struct spi_buf tx_buf = {.buf = {addr & ~(1 << 7), 0x00}, .len = 2};
+    uint8_t t[] = {addr & ~(1 << 7), 0x00};
+    struct spi_buf tx_buf = {.buf = t, .len = 2};
     struct spi_buf_set tx_bufs = {.buffers = &tx_buf, .count = 1};
 
-    struct spi_buf rx_buf = {.buf = {0x00, 0x00}, .len = 2};
+    uint8_t r[] = {0x00, 0x00};
+    struct spi_buf rx_buf = {.buf = r, .len = 2};
     struct spi_buf_set rx_bufs = {.buffers = &rx_buf, .count = 1};
 
     // Perform the read
     spi_transceive(spi_dev, &spi_cfg, &tx_bufs, &rx_bufs);
 
-    return ((uint8_t *)rx_buf.buf)[1];
+    return r[1];
 }
 
 /**
