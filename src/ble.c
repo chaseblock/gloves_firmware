@@ -73,32 +73,18 @@ static int nus_init(void)
     err = bt_nus_init(&init);
     if (err)
     {
-        printk("NUS initialization failed (err %d)", err);
         return err;
     }
 
-    printk("NUS module initialized");
     return err;
 }
 
 static void connected(struct bt_conn *conn, uint8_t conn_err)
 {
-    char addr[BT_ADDR_LE_STR_LEN];
-
-    bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
-
-    volatile uint32_t max_msg_size = bt_nus_get_mtu(conn);
-
-    printk("Connected: %s, mut: %d", addr, max_msg_size);
 }
 
 static void disconnected(struct bt_conn *conn, uint8_t reason)
 {
-    char addr[BT_ADDR_LE_STR_LEN];
-
-    bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
-
-    printk("Disconnected: %s (reason %u)", addr, reason);
 }
 
 BT_CONN_CB_DEFINE(conn_callbacks) = {
@@ -108,16 +94,10 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 
 static void pairing_complete(struct bt_conn *conn, bool bonded)
 {
-    char addr[BT_ADDR_LE_STR_LEN];
-
-    bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 }
 
 static void pairing_failed(struct bt_conn *conn, enum bt_security_err reason)
 {
-    char addr[BT_ADDR_LE_STR_LEN];
-
-    bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 }
 
 static struct bt_conn_auth_info_cb conn_auth_info_callbacks = {
@@ -136,7 +116,6 @@ void ble_init()
     err = bt_conn_auth_info_cb_register(&conn_auth_info_callbacks);
     if (err)
     {
-        printk("Failed to register authorization info callbacks.\n");
         return;
     }
 
@@ -144,25 +123,19 @@ void ble_init()
     err = bt_enable(NULL);
     if (err)
     {
-        printk("Failed to init Bluetooth (err %d)\n", err);
         return;
     }
-    printk("Bluetooth initialized!\n");
 
     err = nus_init();
     if (err != 0)
     {
-        printk("nus_init failed (err %d)", err);
         return;
     }
-
-    printk("Starting Bluetooth Central UART example\n");
 
     err = bt_le_adv_start(BT_LE_ADV_CONN, ad, ARRAY_SIZE(ad), sd,
                           ARRAY_SIZE(sd));
     if (err)
     {
-        printk("Advertising failed to start (err %d)", err);
         return;
     }
 }
@@ -172,7 +145,7 @@ void ble_init()
  *
  * @param data Specification of the data packet to send
  */
-void ble_send_data(ble_data_t *data)
+void ble_send_data(ble_data_t *data, size_t sample_cnt)
 {
     int err;
 
@@ -183,14 +156,17 @@ void ble_send_data(ble_data_t *data)
     sending_data = true;
 
     // Send the data
-    err = bt_nus_send(NULL, (uint8_t *)data, sizeof(*data));
+    err = bt_nus_send(NULL, (uint8_t *)data, sizeof(ble_data_t) * sample_cnt);
     if (err)
-    {
-        printk("Failed to send data over BLE connection (err %d)", err);
-        
+    {   
         sending_data = false;
         k_sem_give(&nus_write_sem);
     }
+}
+
+bool ble_is_sending_data()
+{
+    return sending_data;
 }
 
 /**

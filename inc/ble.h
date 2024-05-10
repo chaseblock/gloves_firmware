@@ -11,19 +11,15 @@
 
 #include <stdint.h>
 #include "imu.h"
+#include "adc.h"
 
 typedef struct ble_data
 {
     // To indicate whether we've been dropping packets or not
     uint16_t pkt_id;
 
-    // The force sensor measurements
-    uint16_t thumb_sensor;
-    uint16_t index_sensor;
-    uint16_t middle_sensor;
-    uint16_t ring_sensor;
-    uint16_t palm1_sensor;
-    uint16_t palm2_sensor;
+    // The force measurements
+    force_data_t force_data;
 
     // The IMU measurements
     imu_data_t imu_data;
@@ -39,7 +35,9 @@ void ble_init();
  *
  * @param data Specification of the data packet to send
  */
-void ble_send_data(ble_data_t *data);
+void ble_send_data(ble_data_t *data, size_t sample_cnt);
+
+bool ble_is_sending_data();
 
 /**
  * Wait for the current message to finish sending over BLE.

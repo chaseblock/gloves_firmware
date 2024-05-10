@@ -110,7 +110,7 @@ static const struct spi_config spi_cfg = {
 void write_register(uint8_t addr, uint8_t data)
 {
     // Arrange the data
-    uint8_t b[] = {addr | (1 << 7), data};
+    uint8_t b[] = {addr & ~(1 << 7), data};
     struct spi_buf tx_buf = {.buf = b, .len = 2};
     struct spi_buf_set tx_bufs = {.buffers = &tx_buf, .count = 1};
 
@@ -121,7 +121,7 @@ void write_register(uint8_t addr, uint8_t data)
 uint8_t read_register(uint8_t addr)
 {
     // Set up the tx and rx buffers
-    uint8_t t[] = {addr & ~(1 << 7), 0x00};
+    uint8_t t[] = {addr | (1 << 7), 0x00};
     struct spi_buf tx_buf = {.buf = t, .len = 2};
     struct spi_buf_set tx_bufs = {.buffers = &tx_buf, .count = 1};
 
@@ -144,11 +144,11 @@ void imu_init()
 
     if (!device_is_ready(spi_dev))
     {
-        printk("SPI master device not ready!\n");
+        return;
     }
     if (!device_is_ready(spim_cs.gpio.port))
     {
-        printk("SPI master chip select device not ready!\n");
+        return;
     }
 
     // Configure the IMU to begin taking measurements

@@ -38,6 +38,10 @@
 	};
 };
 
+&adc {
+	status = "okay";
+};
+
 &uicr {
 	gpio-as-nreset;
 };
